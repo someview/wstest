@@ -1,6 +1,31 @@
 package task
 
-import "time"
+import (
+	"encoding/json"
+	"os"
+	"time"
+)
+
+type TaskConfig struct {
+	MessageCount int64 `json:"messageId"`
+	MessageSize  int64 `json:"MessageSize"`
+}
+
+// GetConfig 从指定路径读取配置文件并返回 TaskConfig
+func LoadConfig(path string) *TaskConfig {
+	file, err := os.Open(path)
+	if err != nil {
+		panic(err)
+	}
+	defer file.Close()
+	var config TaskConfig
+	decoder := json.NewDecoder(file)
+	err = decoder.Decode(&config)
+	if err != nil {
+		panic(err)
+	}
+	return &config
+}
 
 // Task 表示一个发送任务
 type Task struct {
@@ -17,7 +42,6 @@ type Message struct {
 	Payload  []byte
 }
 
-// taskId 从1开始,messageId从1开始
 type TaskResult struct {
 	TaskID      int64           `json:"taskId"`      // 任务ID
 	TotalTime   time.Duration   `json:"totalTime"`   // 总耗时

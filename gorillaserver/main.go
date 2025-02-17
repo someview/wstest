@@ -1,10 +1,11 @@
 package main
 
 import (
+	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
-
-	"github.com/gorilla/websocket"
+	"time"
+	"wstest/task"
 )
 
 var upgrader = websocket.Upgrader{}
@@ -16,19 +17,22 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer conn.Close()
+	go func() {
+		for {
+			_, _, err := conn.ReadMessage()
+			if err != nil {
+				log.Println("Error during message reading:", err)
+				break
+			}
+		}
+	}()
+	runTask(conn)
+}
 
-	for {
-		_, msg, err := conn.ReadMessage()
-		if err != nil {
-			log.Println("Error during message reading:", err)
-			break
-		}
-		err = conn.WriteMessage(websocket.TextMessage, msg)
-		if err != nil {
-			log.Println("Error during message writing:", err)
-			break
-		}
-	}
+func runTask(conn *websocket.Conn) {
+	conf := task.LoadConfig("./config.json")
+	ticker := time.NewTicker(time.Second)
+	defer ticker.Stop()
 }
 
 func main() {
